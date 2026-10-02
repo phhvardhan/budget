@@ -77,6 +77,11 @@ begin
   end loop;
 end $$;
 
+-- Data API access for signed-in users (RLS above still limits them to their own rows) ----
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on public.settings, public.categories, public.bills, public.entries to authenticated;
+revoke all on public.settings, public.categories, public.bills, public.entries from anon;
+
 -- Live sync between your devices ---------------------------------------------------
 alter table public.entries    replica identity full;
 alter table public.bills      replica identity full;
