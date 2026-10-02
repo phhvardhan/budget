@@ -40,7 +40,7 @@ export function Year() {
         eyebrow="Year in review"
         title={
           <>
-            {year}, <span className="italic text-dim">month by month</span>
+            {year}, month by month
           </>
         }
         right={<MonthSwitcher step={12} mode="year" />}
@@ -82,18 +82,18 @@ export function Year() {
                     className="group flex h-full cursor-pointer flex-col items-center justify-end gap-2"
                     aria-label={`${monthLabel(d.month)}: ${formatPct(d.rate)}`}
                   >
-                    <span className="tnum font-mono text-[10px] text-dim opacity-0 transition group-hover:opacity-100 sm:opacity-100">{d.rate == null ? "" : `${Math.round(d.rate * 100)}%`}</span>
+                    <span className="tnum tnum text-[10px] text-dim opacity-0 transition group-hover:opacity-100 sm:opacity-100">{d.rate == null ? "" : `${Math.round(d.rate * 100)}%`}</span>
                     <motion.span
                       className="w-full max-w-[34px] rounded-t-[8px] rounded-b-[3px]"
                       style={{
-                        background: d.month === month ? "linear-gradient(180deg,#f8ecd4,#b5862a)" : "linear-gradient(180deg,rgb(230 211 174 / 0.55),rgb(181 134 42 / 0.35))",
+                        background: d.month === month ? "linear-gradient(180deg,#f3e6cc,#b78a34)" : "linear-gradient(180deg,rgb(230 211 174 / 0.55),rgb(181 134 42 / 0.35))",
                         boxShadow: d.month === month ? "0 0 24px -4px rgb(230 211 174 / 0.6)" : undefined,
                       }}
                       initial={{ height: 0 }}
                       animate={{ height: `${d.rate == null ? 2 : Math.max(3, (r / maxRate) * 100)}px` }}
                       transition={{ type: "spring", stiffness: 120, damping: 18, delay: i * 0.04 }}
                     />
-                    <span className={cn("font-mono text-[10px]", d.month === month ? "text-ivory" : "text-dim")}>{monthLabel(d.month, "short").slice(0, 3)}</span>
+                    <span className={cn("tnum text-[10px]", d.month === month ? "text-ivory" : "text-dim")}>{monthLabel(d.month, "short").slice(0, 3)}</span>
                   </button>
                 );
               })}

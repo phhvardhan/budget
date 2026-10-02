@@ -34,7 +34,7 @@ export function SpendCalendar({ month, days, currency }: { month: string; days: 
           {shown != null ? (
             <>
               <span className="text-ivory">{new Date(y, m - 1, shown + 1).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}</span>
-              {" · "}
+              {": "}
               <span className="tnum text-ivory">{formatMoney(days[shown], currency, true)}</span>
             </>
           ) : (
@@ -46,7 +46,7 @@ export function SpendCalendar({ month, days, currency }: { month: string; days: 
       </div>
       <div className="grid grid-cols-7 gap-1.5">
         {WEEK.map((d, i) => (
-          <span key={i} className="pb-1 text-center font-mono text-[10px] text-dim">
+          <span key={i} className="pb-1 text-center tnum text-[10px] text-dim">
             {d}
           </span>
         ))}
@@ -72,16 +72,15 @@ export function SpendCalendar({ month, days, currency }: { month: string; days: 
               initial={reduce ? false : { opacity: 0, scale: 0.6 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.15 + i * 0.012, type: "spring", stiffness: 300, damping: 24 }}
-              whileHover={future ? undefined : { scale: 1.12 }}
+              whileHover={future ? undefined : { scale: 1.06 }}
               className={cn(
-                "relative grid aspect-square cursor-pointer place-items-center rounded-[9px] font-mono text-[10px] transition-colors disabled:cursor-default",
-                future ? "border border-dashed border-white/[0.06] text-dim/40" : "border border-white/[0.04] text-mist",
+                "relative grid aspect-square cursor-pointer place-items-center rounded-[8px] tnum text-[10px] transition-colors disabled:cursor-default",
+                future ? "text-dim/35" : "text-mist",
                 isToday && "ring-1 ring-champagne/70",
               )}
               style={{
                 background: future ? "transparent" : lv ? `rgb(230 211 174 / ${alpha[lv]})` : "rgb(255 255 255 / 0.025)",
                 color: lv >= 4 ? "#1a1610" : undefined,
-                boxShadow: lv >= 4 ? "0 0 16px -4px rgb(230 211 174 / 0.6)" : undefined,
               }}
             >
               {i + 1}
@@ -89,7 +88,7 @@ export function SpendCalendar({ month, days, currency }: { month: string; days: 
           );
         })}
       </div>
-      <div className="mt-3 flex items-center justify-end gap-1.5 font-mono text-[10px] text-dim">
+      <div className="mt-3 flex items-center justify-end gap-1.5 tnum text-[10px] text-dim">
         less
         {alpha.slice(1).map((a) => (
           <i key={a} className="inline-block size-2.5 rounded-[3px]" style={{ background: `rgb(230 211 174 / ${a})` }} />

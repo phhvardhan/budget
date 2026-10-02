@@ -8,8 +8,8 @@ export const stagger: Variants = {
 };
 
 export const rise: Variants = {
-  hidden: { opacity: 0, y: 18, filter: "blur(8px)" },
-  show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { type: "spring", stiffness: 260, damping: 30 } },
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
 };
 
 /** Grid whose children rise in one after another on first paint. */
@@ -34,7 +34,7 @@ export function Meter({
   value,
   color,
   className,
-  height = 6,
+  height = 4,
   delay = 0,
 }: {
   value: number;
@@ -48,7 +48,7 @@ export function Meter({
     <div className={`relative overflow-hidden rounded-full bg-white/[0.06] ${className ?? ""}`} style={{ height }}>
       <motion.div
         className="absolute inset-y-0 left-0 rounded-full"
-        style={{ background: color, boxShadow: `0 0 18px -2px ${color}` }}
+        style={{ background: color }}
         initial={{ width: 0 }}
         animate={{ width: `${v * 100}%` }}
         transition={{ type: "spring", stiffness: 120, damping: 22, delay }}

@@ -1,35 +1,35 @@
 @import "tailwindcss";
 
 /*
-  Payday Ledger — "Obsidian & Champagne"
-  Ink-black ground with a faint violet warmth, ivory type, one champagne accent.
-  Three jewel tones carry the budget buckets: sapphire (Needs), rose (Wants), gold (Savings).
+  Payday Ledger: "Obsidian & Champagne", refined.
+  Ink ground, ivory type, one champagne accent, and three jewel tones for the budget buckets:
+  sapphire (Needs), rose (Wants), gold (Savings). Nothing glows; hierarchy comes from type and space.
 */
 @theme {
   --color-ink: #0a090d;
   --color-ink-2: #111016;
   --color-ink-3: #18171e;
   --color-ink-4: #211f28;
-  --color-line: rgb(255 255 255 / 0.07);
-  --color-line-2: rgb(255 255 255 / 0.12);
+  --color-line: rgb(255 255 255 / 0.06);
+  --color-line-2: rgb(255 255 255 / 0.1);
   --color-ivory: #f3efe7;
   --color-mist: #aaa5b2;
   --color-dim: #6f6a78;
   --color-champagne: #e6d3ae;
   --color-champagne-deep: #c9b184;
-  --color-needs: #6a88f0;
-  --color-wants: #d06a9a;
-  --color-savings: #b5862a;
+  --color-needs: #6f86e0;
+  --color-wants: #c96c97;
+  --color-savings: #b78a34;
   --color-other: #6b6773;
-  --color-good: #7fd8a9;
+  --color-good: #8fcfaa;
   --color-warn: #f0c66b;
-  --color-bad: #ff7d7d;
+  --color-bad: #ee8a84;
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
-  --font-serif: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-sans: var(--font-sans-face), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --font-serif: var(--font-serif-face), "Iowan Old Style", "Palatino Linotype", Georgia, serif;
 
-  --radius-card: 22px;
+  --radius-card: 16px;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
   --animate-drift-a: drift-a 26s ease-in-out infinite alternate;
@@ -67,14 +67,15 @@ body {
 
 body {
   font-family: var(--font-sans);
-  font-feature-settings: "ss01", "cv11";
+  font-size: 14.5px;
+  letter-spacing: -0.003em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background: rgb(230 211 174 / 0.28);
+  background: rgb(230 211 174 / 0.22);
   color: var(--color-ivory);
 }
 
@@ -91,32 +92,26 @@ body {
 }
 
 /* Surfaces ------------------------------------------------------------------ */
+/* A surface is a faint lift of the ground with a hairline edge; no gradients, glass or glow. */
 @utility glass {
-  background: linear-gradient(180deg, rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.018));
+  background: rgb(255 255 255 / 0.02);
   border: 1px solid var(--color-line);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.05),
-    0 30px 60px -30px rgb(0 0 0 / 0.6);
-  backdrop-filter: blur(22px) saturate(140%);
-  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.03);
 }
 
 @utility glass-strong {
-  background: linear-gradient(180deg, rgb(28 26 34 / 0.92), rgb(17 16 22 / 0.94));
+  background: rgb(19 18 24 / 0.96);
   border: 1px solid var(--color-line-2);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.06),
-    0 40px 80px -20px rgb(0 0 0 / 0.75);
+  box-shadow: 0 30px 60px -24px rgb(0 0 0 / 0.7);
   backdrop-filter: blur(30px) saturate(150%);
   -webkit-backdrop-filter: blur(30px) saturate(150%);
 }
 
+/* Small label: sentence case, set in the text face, quiet colour. */
 @utility eyebrow {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 12.5px;
   font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  letter-spacing: 0;
   color: var(--color-dim);
 }
 
@@ -126,10 +121,7 @@ body {
 }
 
 @utility text-gradient-champagne {
-  background: linear-gradient(100deg, #f8ecd4 0%, #e6d3ae 40%, #b9a07a 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--color-champagne);
 }
 
 @utility hatch {

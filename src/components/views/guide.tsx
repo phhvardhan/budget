@@ -48,7 +48,7 @@ export function Guide() {
         eyebrow="How it works"
         title={
           <>
-            Thirty minutes <span className="italic text-gradient-champagne">a month.</span>
+            Thirty minutes a month.
           </>
         }
         sub="Log every dollar in, log every dollar out, review once a month. That's the whole system."

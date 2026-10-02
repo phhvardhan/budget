@@ -25,7 +25,7 @@ export function LogoMark({ className }: { className?: string }) {
 export function Wordmark({ className }: { className?: string }) {
   return (
     <span className={cn("font-serif text-[22px] leading-none tracking-[-0.01em] text-ivory", className)}>
-      Payday <span className="italic text-gradient-champagne">Ledger</span>
+      Payday Ledger
     </span>
   );
 }

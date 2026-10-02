@@ -24,11 +24,6 @@ import { SpendCalendar } from "@/components/charts/spend-calendar";
 import { EntryRow } from "@/components/entries/entry-row";
 import { SampleBanner } from "./sample-banner";
 
-function greeting() {
-  const h = new Date().getHours();
-  return h < 5 ? "Late night" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-}
-
 export function Overview() {
   const month = useMonth();
   const s = useSummary(month);
@@ -71,10 +66,10 @@ export function Overview() {
   return (
     <>
       <PageHeader
-        eyebrow={isNow ? `${greeting()} · ${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}` : "Looking back"}
+        eyebrow={isNow ? new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "Looking back"}
         title={
           <>
-            {monthLabel(month, "long")} <span className="text-dim italic">{month.slice(0, 4)}</span>
+            {monthLabel(month, "long")} <span className="text-dim">{month.slice(0, 4)}</span>
           </>
         }
         right={<MonthSwitcher />}
@@ -115,11 +110,11 @@ export function Overview() {
             </div>
 
             <div className="mt-8">
-              <div className="flex h-3 gap-[3px] overflow-hidden rounded-full bg-white/[0.04]">
+              <div className="flex h-[6px] gap-[2px] overflow-hidden rounded-full bg-white/[0.04]">
                 {(() => {
                   const scale = Math.max(base, s.outflow) || 1;
                   const segs = [
-                    ...flow.filter((f) => f.v > 0).map((f) => ({ key: f.k, w: f.v / scale, style: { background: f.color, boxShadow: `0 0 14px -2px ${f.color}` }, cls: "" })),
+                    ...flow.filter((f) => f.v > 0).map((f) => ({ key: f.k, w: f.v / scale, style: { background: f.color }, cls: "" })),
                     ...(base - s.outflow > 0 ? [{ key: "left", w: (base - s.outflow) / scale, style: {}, cls: "hatch" }] : []),
                   ];
                   return segs.map((g, i) => (
@@ -147,7 +142,7 @@ export function Overview() {
                 ))}
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 text-[12px] text-mist">
-                    <i className="hatch inline-block size-2 rounded-[3px] ring-1 ring-white/20" style={{ background: s.leftover < 0 && s.hasIncome ? "#ff7d7d" : undefined }} />
+                    <i className="hatch inline-block size-2 rounded-[3px] ring-1 ring-white/20" style={{ background: s.leftover < 0 && s.hasIncome ? "#ee8a84" : undefined }} />
                     {base - s.outflow >= 0 ? "Left over" : "Overspent"}
                   </div>
                   <Money value={Math.abs(base - s.outflow)} className={`mt-1 block font-serif text-[28px] leading-none ${base - s.outflow < 0 ? "text-bad" : "text-gradient-champagne"}`} />
@@ -161,7 +156,7 @@ export function Overview() {
         {/* Savings rate -------------------------------------------------------- */}
         <Rise className="col-span-12 sm:col-span-6 xl:order-1 xl:col-span-4">
           <SpotlightCard className="flex h-full flex-col items-center justify-between gap-5 p-6 text-center" glow="181 134 42">
-            <CardHeader title="Savings rate" hint={`Target ${formatPct(targets.savings)} · tick on the ring`} className="w-full text-left" />
+            <CardHeader title="Savings rate" hint={`Your target is ${formatPct(targets.savings)}, marked on the ring`} className="w-full text-left" />
             <SavingsRing rate={s.rate} target={targets.savings} />
             <p className="max-w-[30ch] text-[13px] text-mist">
               {s.rate == null ? (
@@ -179,7 +174,7 @@ export function Overview() {
         {/* 50/30/20 on small screens sits beside the ring */}
         <Rise className="col-span-12 sm:col-span-6 xl:order-3 xl:col-span-4">
           <SpotlightCard className="h-full p-6">
-            <CardHeader title="50 / 30 / 20 check" hint="Bar is actual · tick is your target" />
+            <CardHeader title="50 / 30 / 20 check" hint="Bars are this month; the mark is your target" />
             <div className="mt-6 flex flex-col gap-6">
               {BUCKET_ORDER.map((k, i) => {
                 const share = base > 0 ? s.buckets[k] / base : 0;
@@ -205,15 +200,15 @@ export function Overview() {
                       {status}
                     </div>
                     <div className="relative">
-                      <Meter value={share} color={BUCKETS[k].color} height={8} delay={0.2 + i * 0.1} />
-                      <span className="absolute -top-1 h-4 w-[2px] rounded-full bg-ivory shadow-[0_0_8px_rgb(255_255_255/0.5)]" style={{ left: `calc(${Math.min(t, 1) * 100}% - 1px)` }} />
+                      <Meter value={share} color={BUCKETS[k].color} height={4} delay={0.2 + i * 0.1} />
+                      <span className="absolute -top-[4px] h-3 w-px bg-ivory/80" style={{ left: `${Math.min(t, 1) * 100}%` }} />
                     </div>
                     <div className="tnum mt-2 flex justify-between text-[11.5px] text-dim">
                       <span>
-                        <span className="text-mist">{formatPct(share)}</span> · {formatMoney(s.buckets[k], currency)}
+                        <span className="text-mist">{formatPct(share)}</span>, {formatMoney(s.buckets[k], currency)}
                       </span>
                       <span>
-                        target {formatPct(t)} · {formatMoney(budgets[k], currency)}
+                        target {formatPct(t)}, {formatMoney(budgets[k], currency)}
                       </span>
                     </div>
                   </div>
@@ -228,7 +223,7 @@ export function Overview() {
           <SpotlightCard className="p-6 sm:p-7">
             <CardHeader
               title="Where your paycheck went"
-              hint="Hover a ribbon to trace it. Particles drift at the pace your money moves."
+              hint="Hover a stream to trace it."
               action={
                 <div className="flex flex-wrap gap-3 text-[11.5px] text-mist">
                   {BUCKET_ORDER.map((b) => (

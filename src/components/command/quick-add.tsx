@@ -214,7 +214,7 @@ function QuickAddPanel() {
                       {parsed.type === "expense" && (
                         <Chip color={cat ? BUCKETS[cat.bucket].color : undefined}>{cat ? cat.name : "Pick a category on Enter"}</Chip>
                       )}
-                      {parsed.type === "income" && <Chip color="#7fd8a9">{parsed.source}</Chip>}
+                      {parsed.type === "income" && <Chip color="#8fcfaa">{parsed.source}</Chip>}
                       <Chip>{dayLabel(parsed.date)}</Chip>
                     </div>
                   </div>

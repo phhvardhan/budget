@@ -27,7 +27,7 @@ function Splash() {
     <div className="grid min-h-dvh place-items-center">
       <motion.div initial={{ opacity: 0, scale: 0.9, filter: "blur(10px)" }} animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }} transition={{ duration: 0.6 }} className="flex flex-col items-center gap-4">
         <LogoMark className="size-14" />
-        <div className="h-[2px] w-24 animate-shimmer rounded-full bg-[linear-gradient(90deg,transparent,rgb(230_211_174/0.8),transparent)] bg-[length:200%_100%]" />
+        <div className="h-px w-20 animate-shimmer bg-[linear-gradient(90deg,transparent,rgb(230_211_174/0.6),transparent)] bg-[length:200%_100%]" />
       </motion.div>
     </div>
   );
@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <button
           type="button"
           onClick={() => useUI.getState().set({ quickAdd: true })}
-          className="group flex cursor-pointer items-center gap-2.5 rounded-2xl border border-line bg-white/[0.03] px-3.5 py-2.5 text-left text-[13px] text-mist transition hover:border-champagne/30 hover:bg-white/[0.05] hover:text-ivory"
+          className="group flex cursor-pointer items-center gap-2.5 rounded-[11px] border border-line px-3.5 py-2.5 text-left text-[13px] text-mist transition hover:border-line-2 hover:text-ivory"
         >
           <Plus className="size-4 text-champagne transition group-hover:rotate-90" />
           <span className="flex-1">Quick add</span>
@@ -112,12 +112,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {active && (
                   <motion.span
                     layoutId="nav-active"
-                    className="absolute inset-0 rounded-xl border border-white/[0.07] bg-[linear-gradient(90deg,rgb(230_211_174/0.12),rgb(255_255_255/0.025))]"
+                    className="absolute inset-0 rounded-[10px] bg-white/[0.04]"
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
                   />
                 )}
                 {active && (
-                  <motion.span layoutId="nav-dot" className="absolute top-1/2 -left-5 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-champagne shadow-[0_0_12px_rgb(230_211_174/0.8)]" />
+                  <motion.span layoutId="nav-dot" className="absolute top-1/2 -left-5 h-4 w-[2px] -translate-y-1/2 rounded-r-full bg-champagne" />
                 )}
                 <n.icon className={cn("relative size-[17px]", active && "text-champagne")} strokeWidth={1.8} />
                 <span className="relative">{n.label}</span>
@@ -174,7 +174,7 @@ function MobileDock({ pathname }: { pathname: string }) {
           whileTap={{ scale: 0.9 }}
           onClick={() => useUI.getState().set({ quickAdd: true })}
           aria-label="Quick add"
-          className="grid size-12 shrink-0 cursor-pointer place-items-center rounded-[18px] bg-[linear-gradient(180deg,#f2e3c4,#d9c296)] text-[#1a1610] shadow-[0_8px_24px_-6px_rgb(230_211_174/0.6),inset_0_1px_0_rgb(255_255_255/0.6)]"
+          className="grid size-12 shrink-0 cursor-pointer place-items-center rounded-[16px] bg-champagne text-[#17140f]"
         >
           <Plus className="size-5" strokeWidth={2.4} />
         </motion.button>
@@ -192,8 +192,8 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
     <AnimatePresence mode="wait">
       <motion.div
         key={pathname}
-        initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
-        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
       >
         {children}

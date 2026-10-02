@@ -64,7 +64,7 @@ export function Budget() {
         eyebrow="Budget"
         title={
           <>
-            Every dollar, <span className="italic text-gradient-champagne">a job</span>
+            Every dollar, a job
           </>
         }
         sub="Set what you take home, then split it across categories until nothing is left unassigned. Changes save as you type."
@@ -108,7 +108,7 @@ export function Budget() {
                     <motion.div
                       key={k}
                       className="h-full rounded-full"
-                      style={{ background: BUCKETS[k].color, boxShadow: `0 0 14px -2px ${BUCKETS[k].color}` }}
+                      style={{ background: BUCKETS[k].color }}
                       animate={{ width: `${(bb[k] / scale) * 100}%` }}
                       initial={{ width: 0 }}
                       transition={{ type: "spring", stiffness: 120, damping: 22 }}
@@ -185,7 +185,7 @@ function BucketGroup({ bucket, categories, total, takeHome, currency }: { bucket
     <div className="mt-5">
       <div className="flex items-center justify-between border-b border-line pb-2.5">
         <span className="flex items-center gap-2 text-[14px] font-medium text-ivory">
-          <i className="inline-block size-2.5 rounded-[4px]" style={{ background: BUCKETS[bucket].color, boxShadow: `0 0 10px ${BUCKETS[bucket].color}` }} />
+          <i className="inline-block size-2.5 rounded-[4px]" style={{ background: BUCKETS[bucket].color }} />
           {BUCKETS[bucket].label}
         </span>
         <Money value={total} className="font-serif text-[20px] text-ivory" />

@@ -86,7 +86,7 @@ export function Activity() {
 
   return (
     <>
-      <PageHeader eyebrow="Activity" title={<>Every dollar, <span className="italic text-dim">in and out</span></>} right={<MonthSwitcher />} />
+      <PageHeader eyebrow="Activity" title={<>Every dollar, in and out</>} right={<MonthSwitcher />} />
       <SampleBanner />
       <Stagger className="flex flex-col gap-5">
         <Rise className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
@@ -166,7 +166,7 @@ export function Activity() {
                     <motion.div key={g.date} layout className="mb-3">
                       <div className="sticky top-0 z-[1] -mx-1 flex items-baseline justify-between bg-[linear-gradient(180deg,rgb(17_16_22/0.96),rgb(17_16_22/0.85))] px-1 py-2 backdrop-blur">
                         <span className="eyebrow">{dayLabel(g.date)}</span>
-                        {g.total > 0 && <span className="tnum font-mono text-[11px] text-dim">−{formatMoney(g.total, currency, true)}</span>}
+                        {g.total > 0 && <span className="tnum tnum text-[11px] text-dim">−{formatMoney(g.total, currency, true)}</span>}
                       </div>
                       <AnimatePresence initial={false}>
                         {g.items.map((e) => (

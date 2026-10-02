@@ -16,12 +16,12 @@ export function PageHeader({
   return (
     <header className="mb-7 flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
       <div className="min-w-0">
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="eyebrow mb-3">
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="eyebrow mb-2.5">
           {eyebrow}
         </motion.div>
         <motion.h1
-          initial={{ opacity: 0, y: 14, filter: "blur(10px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="font-serif text-[44px] leading-[0.95] tracking-[-0.02em] text-balance text-ivory sm:text-[56px]"
         >

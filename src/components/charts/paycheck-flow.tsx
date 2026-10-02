@@ -33,7 +33,7 @@ const GAP = 14;
 
 /**
  * Paycheck flow: gross → taxes / take-home → Needs · Wants · Savings · Left over → biggest categories.
- * A Sankey drawn by hand so every ribbon can animate in and carry drifting light particles.
+ * A Sankey drawn by hand so every ribbon can draw itself in and be traced on hover.
  */
 export function PaycheckFlow({
   summary,
@@ -71,7 +71,7 @@ export function PaycheckFlow({
     const netLabel = s.hasIncome ? "Take-home" : "Expected take-home";
     if (base > 0) nodes.push({ id: "net", label: netLabel, value: base, color: "#e6d3ae", col });
     const over = Math.max(s.outflow - Math.max(base, 0), 0);
-    if (over > 0) nodes.push({ id: "over", label: "Overspent", value: over, color: "#ff7d7d", col, hatched: true });
+    if (over > 0) nodes.push({ id: "over", label: "Overspent", value: over, color: "#ee8a84", col, hatched: true });
 
     const bcol = col + 1;
     const spentTotal = s.outflow || 1;
@@ -122,7 +122,7 @@ export function PaycheckFlow({
 
     // ---- layout
     const cols = Math.max(...nodes.map((n) => n.col)) + 1;
-    const labelW = compact ? 118 : 170;
+    const labelW = compact ? 124 : 196;
     const padT = 10;
     const innerH = H - padT * 2;
     const colNodes = Array.from({ length: cols }, (_, c) => nodes.filter((n) => n.col === c));
@@ -180,12 +180,6 @@ export function PaycheckFlow({
     const y0 = l.sy!, y1 = l.ty!, w = l.w!;
     return `M${x0},${y0}C${xm},${y0} ${xm},${y1} ${x1},${y1}L${x1},${y1 + w}C${xm},${y1 + w} ${xm},${y0 + w} ${x0},${y0 + w}Z`;
   };
-  const center = (l: FLink) => {
-    const s = byNode.get(l.source)!, t = byNode.get(l.target)!;
-    const x0 = s.x + NODE_W, x1 = t.x, xm = (x0 + x1) / 2;
-    const y0 = l.sy! + l.w! / 2, y1 = l.ty! + l.w! / 2;
-    return `M${x0},${y0}C${xm},${y0} ${xm},${y1} ${x1},${y1}`;
-  };
   const active = (l: FLink) => !hover || hover === l.id || hover === l.source || hover === l.target;
   const hovered = links.find((l) => l.id === hover);
   const hoveredNode = nodes.find((n) => n.id === hover);
@@ -225,21 +219,11 @@ export function PaycheckFlow({
               key={l.id}
               d={ribbon(l)}
               fill={`url(#lg-${l.id})`}
-              style={{ opacity: active(l) ? (hover ? 0.62 : 0.3) : 0.07, transition: "opacity 300ms ease" }}
+              style={{ opacity: active(l) ? (hover ? 0.55 : 0.24) : 0.06, transition: "opacity 300ms ease" }}
               onPointerEnter={() => setHover(l.id)}
               onPointerLeave={() => setHover(null)}
             />
           ))}
-          {!reduce &&
-            links
-              .filter((l) => (l.w ?? 0) > 3)
-              .flatMap((l, i) =>
-                Array.from({ length: (l.w ?? 0) > 40 ? 3 : (l.w ?? 0) > 14 ? 2 : 1 }, (_, j) => (
-                  <circle key={`${l.id}-p${j}`} r={1.4} fill="#fff8ea" opacity={active(l) ? 0.75 : 0.1} style={{ transition: "opacity 300ms" }}>
-                    <animateMotion dur={`${3.6 + ((i * 7 + j * 3) % 5) * 0.45}s`} begin={`${-((i * 1.3 + j * 1.9) % 4)}s`} repeatCount="indefinite" path={center(l)} />
-                  </circle>
-                )),
-              )}
         </g>
 
         {nodes.map((n, i) => (
@@ -255,7 +239,7 @@ export function PaycheckFlow({
               strokeOpacity={0.6}
               initial={reduce ? false : { scaleY: 0, opacity: 0 }}
               animate={{ scaleY: 1, opacity: 1 }}
-              style={{ originY: 0.5, filter: n.hatched ? undefined : `drop-shadow(0 0 6px ${n.color}66)` }}
+              style={{ originY: 0.5 }}
               transition={{ type: "spring", stiffness: 140, damping: 20, delay: 0.1 + n.col * 0.22 + i * 0.015 }}
             />
             <motion.text
@@ -266,7 +250,6 @@ export function PaycheckFlow({
               animate={{ opacity: !hover || hover === n.id || links.some((l) => l.id === hover && (l.source === n.id || l.target === n.id)) ? 1 : 0.35 }}
               transition={{ duration: 0.5, delay: reduce ? 0 : 0.35 + n.col * 0.22 }}
               className="pointer-events-none select-none"
-              style={{ paintOrder: "stroke", stroke: "#0d0c11", strokeWidth: 4, strokeLinejoin: "round" }}
             >
               <tspan fontSize={compact ? 11 : 11.5} fill="#aaa5b2">
                 {n.label.length > (compact ? 14 : 22) ? `${n.label.slice(0, compact ? 13 : 21).trimEnd()}…` : n.label}

@@ -90,7 +90,7 @@ export function SignIn() {
         <h1 className="font-serif text-[52px] leading-[0.95] tracking-[-0.02em] text-ivory">
           Your money,
           <br />
-          <span className="italic text-gradient-champagne">quietly in order.</span>
+          quietly in order.
         </h1>
         <p className="mt-4 text-[14.5px] text-mist">Sign in to sync your ledger across your devices. You stay signed in until you sign out.</p>
 

@@ -1,9 +1,9 @@
 import type { Bucket, Category } from "./types";
 
 export const BUCKETS: Record<Bucket, { label: string; short: string; color: string; hint: string }> = {
-  needs: { label: "Needs", short: "Needs", color: "#6A88F0", hint: "Rent, groceries, bills — what you can't skip" },
-  wants: { label: "Wants", short: "Wants", color: "#D06A9A", hint: "Dining, shopping, travel — the fun part" },
-  savings: { label: "Savings & Debt", short: "Saved", color: "#B5862A", hint: "Savings, investing, extra debt payments" },
+  needs: { label: "Needs", short: "Needs", color: "#6F86E0", hint: "Rent, groceries, bills — what you can't skip" },
+  wants: { label: "Wants", short: "Wants", color: "#C96C97", hint: "Dining, shopping, travel — the fun part" },
+  savings: { label: "Savings & Debt", short: "Saved", color: "#B78A34", hint: "Savings, investing, extra debt payments" },
 };
 export const OTHER_COLOR = "#6B6773";
 export const LEFTOVER_COLOR = "#E6D3AE";
