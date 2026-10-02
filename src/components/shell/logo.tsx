@@ -1,23 +1,31 @@
 "use client";
 
+import { useId } from "react";
 import { cn } from "@/lib/cn";
 
-/** A cash envelope with a note standing up out of it. */
 export function LogoMark({ className }: { className?: string }) {
+  const id = `logo-${useId().replace(/:/g, "")}`;
   return (
     <svg viewBox="0 0 64 64" className={cn("size-8", className)} aria-hidden>
-      <rect x="7" y="22" width="50" height="34" rx="5" fill="#26222c" />
-      <g transform="rotate(-7 32 26)">
-        <rect x="17" y="7" width="30" height="34" rx="3" fill="#e6d3ae" />
-        <rect x="20.5" y="10.5" width="23" height="27" rx="1.5" fill="none" stroke="#7a6844" strokeOpacity="0.55" strokeWidth="1.4" />
-        <circle cx="32" cy="20" r="4.2" fill="none" stroke="#7a6844" strokeOpacity="0.7" strokeWidth="1.6" />
-      </g>
-      <path d="M7 33h18.5c2.2 0 3.4 4.6 6.5 4.6s4.3-4.6 6.5-4.6H57v18a5 5 0 0 1-5 5H12a5 5 0 0 1-5-5z" fill="#3a3441" />
-      <path d="M7.6 54.5 32 44l24.4 10.5" fill="none" stroke="#fff" strokeOpacity="0.13" strokeWidth="1.3" />
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#f8ecd4" />
+          <stop offset="1" stopColor="#b9a07a" />
+        </linearGradient>
+      </defs>
+      <rect width="64" height="64" rx="18" fill="#16151b" />
+      <rect x="0.5" y="0.5" width="63" height="63" rx="17.5" fill="none" stroke="#fff" strokeOpacity="0.1" />
+      <path d="M14 44 C 24 44, 26 22, 36 22 S 46 30, 50 18" fill="none" stroke={`url(#${id})`} strokeWidth="4.5" strokeLinecap="round" />
+      <circle cx="50" cy="18" r="4" fill="#f8ecd4" />
+      <rect x="14" y="48" width="36" height="3" rx="1.5" fill="#fff" fillOpacity="0.16" />
     </svg>
   );
 }
 
 export function Wordmark({ className }: { className?: string }) {
-  return <span className={cn("text-[20px] leading-none font-semibold tracking-[-0.03em] text-ivory [font-stretch:84%]", className)}>Payday Ledger</span>;
+  return (
+    <span className={cn("font-serif text-[22px] leading-none tracking-[-0.01em] text-ivory", className)}>
+      Payday <span className="italic text-gradient-champagne">Ledger</span>
+    </span>
+  );
 }

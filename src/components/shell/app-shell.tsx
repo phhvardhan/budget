@@ -105,19 +105,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 key={n.href}
                 href={n.href}
                 className={cn(
-                  "relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-[14.5px] font-medium transition-colors",
+                  "relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-[13.5px] font-medium transition-colors",
                   active ? "text-ivory" : "text-dim hover:text-mist",
                 )}
               >
                 {active && (
                   <motion.span
                     layoutId="nav-active"
-                    className="absolute inset-0 rounded-xl bg-white/[0.05]"
+                    className="absolute inset-0 rounded-xl border border-white/[0.07] bg-[linear-gradient(90deg,rgb(230_211_174/0.12),rgb(255_255_255/0.025))]"
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
                   />
                 )}
                 {active && (
-                  <motion.span layoutId="nav-dot" className="absolute top-1/2 -left-5 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-champagne" />
+                  <motion.span layoutId="nav-dot" className="absolute top-1/2 -left-5 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-champagne shadow-[0_0_12px_rgb(230_211_174/0.8)]" />
                 )}
                 <n.icon className={cn("relative size-[17px]", active && "text-champagne")} strokeWidth={1.8} />
                 <span className="relative">{n.label}</span>

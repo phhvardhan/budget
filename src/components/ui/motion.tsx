@@ -48,7 +48,7 @@ export function Meter({
     <div className={`relative overflow-hidden rounded-full bg-white/[0.06] ${className ?? ""}`} style={{ height }}>
       <motion.div
         className="absolute inset-y-0 left-0 rounded-full"
-        style={{ background: color }}
+        style={{ background: color, boxShadow: `0 0 18px -2px ${color}` }}
         initial={{ width: 0 }}
         animate={{ width: `${v * 100}%` }}
         transition={{ type: "spring", stiffness: 120, damping: 22, delay }}

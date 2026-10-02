@@ -1,15 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import "@fontsource/instrument-serif/400.css";
+import "@fontsource/instrument-serif/400-italic.css";
 import "./globals.css";
 import { Backdrop } from "@/components/ui/backdrop";
-
-/** Bricolage Grotesque: one variable family for everything. Width and optical size do the work a second typeface would. */
-const bricolage = Bricolage_Grotesque({
-  subsets: ["latin"],
-  axes: ["opsz", "wdth"],
-  variable: "--font-bricolage",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: { default: "Payday Ledger", template: "%s · Payday Ledger" },
@@ -28,7 +23,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${bricolage.variable} h-full`}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} h-full`}>
       <body className="min-h-full overflow-x-hidden">
         <Backdrop />
         {children}

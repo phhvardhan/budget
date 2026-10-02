@@ -41,13 +41,14 @@ export function Welcome() {
           <LogoMark className="size-10" />
           <Wordmark />
         </div>
-        <h1 className="display text-[44px] text-ivory sm:text-[58px]">
+        <div className="eyebrow mb-4">Set up · about a minute</div>
+        <h1 className="font-serif text-[48px] leading-[0.98] tracking-[-0.02em] text-ivory sm:text-[60px]">
           Give every dollar
           <br />
-          of your paycheck a job.
+          of your paycheck <span className="italic text-gradient-champagne">a job.</span>
         </h1>
         <p className="mt-4 max-w-[48ch] text-[14.5px] text-mist">
-          Tell the ledger what lands in your account each month. It builds a starting budget on the 50/30/20 split that you can reshape any time. Setup takes about a minute.
+          Tell the ledger what lands in your account each month. It builds a starting budget on the 50/30/20 split that you can reshape any time.
         </p>
 
         <form

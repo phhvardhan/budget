@@ -122,7 +122,7 @@ export function PaycheckFlow({
 
     // ---- layout
     const cols = Math.max(...nodes.map((n) => n.col)) + 1;
-    const labelW = compact ? 124 : 200;
+    const labelW = compact ? 118 : 170;
     const padT = 10;
     const innerH = H - padT * 2;
     const colNodes = Array.from({ length: cols }, (_, c) => nodes.filter((n) => n.col === c));
@@ -255,7 +255,7 @@ export function PaycheckFlow({
               strokeOpacity={0.6}
               initial={reduce ? false : { scaleY: 0, opacity: 0 }}
               animate={{ scaleY: 1, opacity: 1 }}
-              style={{ originY: 0.5 }}
+              style={{ originY: 0.5, filter: n.hatched ? undefined : `drop-shadow(0 0 6px ${n.color}66)` }}
               transition={{ type: "spring", stiffness: 140, damping: 20, delay: 0.1 + n.col * 0.22 + i * 0.015 }}
             />
             <motion.text
@@ -266,7 +266,7 @@ export function PaycheckFlow({
               animate={{ opacity: !hover || hover === n.id || links.some((l) => l.id === hover && (l.source === n.id || l.target === n.id)) ? 1 : 0.35 }}
               transition={{ duration: 0.5, delay: reduce ? 0 : 0.35 + n.col * 0.22 }}
               className="pointer-events-none select-none"
-              style={{ paintOrder: "stroke", stroke: "rgb(10 9 13 / 0.7)", strokeWidth: 3, strokeLinejoin: "round" }}
+              style={{ paintOrder: "stroke", stroke: "#0d0c11", strokeWidth: 4, strokeLinejoin: "round" }}
             >
               <tspan fontSize={compact ? 11 : 11.5} fill="#aaa5b2">
                 {n.label.length > (compact ? 14 : 22) ? `${n.label.slice(0, compact ? 13 : 21).trimEnd()}…` : n.label}

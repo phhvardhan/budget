@@ -1,26 +1,33 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight, CalendarClock, Plus } from "lucide-react";
 import { useData, useUI } from "@/lib/store";
 import { useMonth, useSummary, useTrailing, openEntry, setMonth } from "@/lib/hooks";
-import { billStates, budgetState, dailySpending, entriesIn, sortEntries, targetsOf } from "@/lib/calc";
-import { BUCKETS, BUCKET_ORDER, LEFTOVER_COLOR } from "@/lib/defaults";
+import { billStates, bucketBudgets, budgetState, dailySpending, entriesIn, sortEntries, targetsOf } from "@/lib/calc";
+import { BUCKETS, BUCKET_ORDER, LEFTOVER_COLOR, OTHER_COLOR } from "@/lib/defaults";
 import { formatMoney, formatPct } from "@/lib/format";
-import { monthLabel } from "@/lib/dates";
-import type { Bucket, Category, MonthSummary } from "@/lib/types";
+import { monthLabel, thisMonth } from "@/lib/dates";
+import { PageHeader } from "@/components/shell/page-header";
 import { MonthSwitcher } from "@/components/shell/month-switcher";
+import { SpotlightCard, CardHeader } from "@/components/ui/spotlight-card";
+import { HeroMoney, Money } from "@/components/ui/money";
 import { Button } from "@/components/ui/button";
+import { Stagger, Rise, Meter } from "@/components/ui/motion";
 import { Status } from "@/components/ui/status";
 import { PaycheckFlow } from "@/components/charts/paycheck-flow";
 import { TrendChart } from "@/components/charts/trend-chart";
+import { SavingsRing } from "@/components/charts/savings-ring";
 import { SpendCalendar } from "@/components/charts/spend-calendar";
 import { EntryRow } from "@/components/entries/entry-row";
-import { Envelope, readEnvelope, type EnvelopeData } from "@/components/envelopes/envelope";
 import { SampleBanner } from "./sample-banner";
-import { cn } from "@/lib/cn";
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 5 ? "Late night" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+}
 
 export function Overview() {
   const month = useMonth();
@@ -31,352 +38,360 @@ export function Overview() {
   const entries = useData((x) => x.entries);
   const bills = useData((x) => x.bills);
   const currency = settings.currency;
-  const base = s.hasIncome ? s.net : settings.takeHome;
+  const takeHome = settings.takeHome;
+  const base = s.hasIncome ? s.net : takeHome;
   const targets = targetsOf(settings);
+  const budgets = bucketBudgets(categories);
   const catById = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
-  const [open, setOpen] = useState<string | null>(null);
 
-  const shelves = useMemo(() => {
-    const sorted = [...categories].sort((a, b) => a.sort - b.sort);
-    return BUCKET_ORDER.map((bucket) => ({
-      bucket,
-      envelopes: sorted
-        .filter((c) => c.bucket === bucket)
-        .map((c): EnvelopeData => ({ id: c.id, name: c.name, bucket, budget: c.budget, spent: s.byCategory[c.id] || 0 }))
-        .filter((e) => e.budget > 0 || e.spent > 0),
-    })).filter((x) => x.envelopes.length > 0);
-  }, [categories, s]);
-
+  const watch = useMemo(
+    () =>
+      categories
+        .map((c) => {
+          const spent = s.byCategory[c.id] || 0;
+          return { c, spent, used: c.budget > 0 ? spent / c.budget : spent > 0 ? Infinity : 0 };
+        })
+        .filter((x) => x.c.budget > 0 || x.spent > 0)
+        .sort((a, b) => b.used - a.used)
+        .slice(0, 6),
+    [categories, s],
+  );
   const recent = useMemo(() => sortEntries(entriesIn(entries, month)).slice(0, 6), [entries, month]);
-  const due = useMemo(() => billStates(month, bills, entries).filter((b) => b.state.kind !== "paid").slice(0, 5), [month, bills, entries]);
+  const due = useMemo(() => billStates(month, bills, entries).filter((b) => b.state.kind !== "paid").slice(0, 4), [month, bills, entries]);
   const days = useMemo(() => dailySpending(month, entries), [month, entries]);
+  const isNow = month === thisMonth();
 
-  // Where each shelf starts in the overall order, so the drop-in plays left to right, top to bottom.
-  const starts = shelves.map((_, i) => shelves.slice(0, i).reduce((a, x) => a + x.envelopes.length, 0));
+  const flow = [
+    { k: "needs", label: "Needs", v: s.buckets.needs, color: BUCKETS.needs.color },
+    { k: "wants", label: "Wants", v: s.buckets.wants, color: BUCKETS.wants.color },
+    { k: "savings", label: "Saved & invested", v: s.buckets.savings, color: BUCKETS.savings.color },
+    ...(s.buckets.other > 0 ? [{ k: "other", label: "Uncategorized", v: s.buckets.other, color: OTHER_COLOR }] : []),
+  ];
 
   return (
     <>
-      <Headline s={s} base={base} month={month} currency={currency} savingsTarget={targets.savings} />
+      <PageHeader
+        eyebrow={isNow ? `${greeting()} · ${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}` : "Looking back"}
+        title={
+          <>
+            {monthLabel(month, "long")} <span className="text-dim italic">{month.slice(0, 4)}</span>
+          </>
+        }
+        right={<MonthSwitcher />}
+      />
       <SampleBanner />
 
-      {/* The envelopes ------------------------------------------------------------- */}
-      <div className="flex flex-col gap-10">
-        {shelves.map(({ bucket, envelopes }, si) => {
-          const openHere = envelopes.find((e) => e.id === open);
-          return (
-            <section key={bucket} aria-labelledby={`shelf-${bucket}`}>
-              <ShelfHeader bucket={bucket} s={s} base={base} target={targets[bucket]} budget={envelopes.reduce((a, e) => a + e.budget, 0)} currency={currency} />
-              <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pt-1 pb-3 sm:mx-0 sm:grid sm:grid-cols-[repeat(auto-fill,minmax(138px,1fr))] sm:gap-x-3.5 sm:gap-y-7 sm:overflow-visible sm:px-0">
-                {envelopes.map((e, ei) => (
-                  <div key={e.id} className="w-[46%] max-w-[210px] shrink-0 snap-start sm:w-auto sm:max-w-none">
-                    <Envelope data={e} currency={currency} index={starts[si] + ei} selected={open === e.id} onSelect={() => setOpen(open === e.id ? null : e.id)} />
+      <Stagger className="grid grid-cols-12 gap-4 lg:gap-5">
+        {/* Hero ----------------------------------------------------------------- */}
+        <Rise className="col-span-12 xl:order-1 xl:col-span-8">
+          <SpotlightCard className="h-full p-6 sm:p-8">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0">
+                <div className="eyebrow">{s.hasIncome ? "Take-home pay" : "Expected take-home"}</div>
+                <HeroMoney value={base} className="mt-3 font-serif text-[64px] leading-[0.9] tracking-[-0.03em] text-ivory sm:text-[88px]" />
+                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-mist">
+                  {s.hasIncome ? (
+                    <>
+                      <span>
+                        Gross <Money value={s.gross} className="text-ivory" />
+                      </span>
+                      <span>
+                        Taxes &amp; deductions <Money value={s.deductions} className="text-ivory" />
+                      </span>
+                    </>
+                  ) : (
+                    <span className="flex items-center gap-3">
+                      No paycheck logged for {monthLabel(month, "long")} yet.
+                      <Button variant="link" onClick={() => openEntry("income")}>
+                        Log a paycheck
+                      </Button>
+                    </span>
+                  )}
+                </div>
+              </div>
+              <Button variant="primary" onClick={() => useUI.getState().set({ quickAdd: true })} className="hidden sm:inline-flex">
+                <Plus /> Quick add
+              </Button>
+            </div>
+
+            <div className="mt-8">
+              <div className="flex h-3 gap-[3px] overflow-hidden rounded-full bg-white/[0.04]">
+                {(() => {
+                  const scale = Math.max(base, s.outflow) || 1;
+                  const segs = [
+                    ...flow.filter((f) => f.v > 0).map((f) => ({ key: f.k, w: f.v / scale, style: { background: f.color, boxShadow: `0 0 14px -2px ${f.color}` }, cls: "" })),
+                    ...(base - s.outflow > 0 ? [{ key: "left", w: (base - s.outflow) / scale, style: {}, cls: "hatch" }] : []),
+                  ];
+                  return segs.map((g, i) => (
+                    <motion.div
+                      key={g.key}
+                      className={`h-full min-w-[3px] rounded-full ${g.cls}`}
+                      style={g.style}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${g.w * 100}%` }}
+                      transition={{ type: "spring", stiffness: 90, damping: 20, delay: 0.25 + i * 0.08 }}
+                    />
+                  ));
+                })()}
+              </div>
+              <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
+                {flow.map((f) => (
+                  <div key={f.k} className="min-w-0">
+                    <div className="flex items-center gap-1.5 text-[12px] text-mist">
+                      <i className="inline-block size-2 rounded-[3px]" style={{ background: f.color }} />
+                      {f.label}
+                    </div>
+                    <Money value={f.v} className="mt-1 block font-serif text-[28px] leading-none text-ivory" />
+                    <div className="tnum mt-1 text-[11.5px] text-dim">{base > 0 ? `${formatPct(f.v / base)} of pay` : " "}</div>
                   </div>
                 ))}
-              </div>
-              <AnimatePresence initial={false}>
-                {openHere && (
-                  <EnvelopeContents
-                    key={openHere.id}
-                    data={openHere}
-                    category={catById.get(openHere.id)!}
-                    month={month}
-                    currency={currency}
-                    onClose={() => setOpen(null)}
-                  />
-                )}
-              </AnimatePresence>
-            </section>
-          );
-        })}
-        {shelves.length === 0 && (
-          <div className="rounded-[var(--radius-card)] border border-dashed border-line-2 px-6 py-10 text-center text-[14px] text-mist">
-            No envelopes yet. Give your categories a budget and each one gets an envelope here.{" "}
-            <Link href="/budget" className="text-champagne hover:text-ivory">
-              Set budgets
-            </Link>
-          </div>
-        )}
-      </div>
-
-      {/* Below the envelopes: quiet sections, no cards ----------------------------------- */}
-      <div className="mt-16 grid grid-cols-12 gap-x-10 gap-y-14">
-        <Section
-          className="col-span-12 lg:col-span-5"
-          title="Coming up"
-          action={
-            <Link href="/bills" className="flex items-center gap-1 text-[13px] text-champagne hover:text-ivory">
-              All bills <ArrowUpRight className="size-3.5" />
-            </Link>
-          }
-        >
-          {bills.length === 0 ? (
-            <Empty icon={<CalendarClock className="size-5" />}>
-              Add rent, phone and subscriptions so nothing slips.{" "}
-              <Link href="/bills" className="text-champagne">
-                Add bills
-              </Link>
-            </Empty>
-          ) : due.length === 0 ? (
-            <Empty>Every bill is logged for {monthLabel(month, "long")}.</Empty>
-          ) : (
-            <ol className="flex flex-col">
-              {due.map(({ bill, day, state }) => (
-                <li key={bill.id} className="flex items-center gap-4 border-t border-line py-3 first:border-t-0">
-                  <span className="font-serif w-8 shrink-0 text-right text-[28px] leading-none text-ivory/90">{day}</span>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-[14px] text-ivory">{bill.name}</div>
-                    <div className="text-[12.5px] text-dim">{bill.amount ? formatMoney(bill.amount, currency, true) : "Amount varies"}</div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-[12px] text-mist">
+                    <i className="hatch inline-block size-2 rounded-[3px] ring-1 ring-white/20" style={{ background: s.leftover < 0 && s.hasIncome ? "#ff7d7d" : undefined }} />
+                    {base - s.outflow >= 0 ? "Left over" : "Overspent"}
                   </div>
-                  <BillPill state={state} />
-                </li>
-              ))}
-            </ol>
-          )}
-        </Section>
+                  <Money value={Math.abs(base - s.outflow)} className={`mt-1 block font-serif text-[28px] leading-none ${base - s.outflow < 0 ? "text-bad" : "text-gradient-champagne"}`} />
+                  <div className="mt-1 text-[11.5px] text-dim">{base - s.outflow >= 0 ? "Sweep it into savings" : "More than came in"}</div>
+                </div>
+              </div>
+            </div>
+          </SpotlightCard>
+        </Rise>
 
-        <Section
-          className="col-span-12 lg:col-span-7"
-          title="Latest"
-          action={
-            <Link href="/activity" className="flex items-center gap-1 text-[13px] text-champagne hover:text-ivory">
-              All activity <ArrowUpRight className="size-3.5" />
-            </Link>
-          }
-        >
-          {recent.length === 0 ? (
-            <Empty>
-              Nothing logged for {monthLabel(month)}.{" "}
-              <button type="button" className="cursor-pointer text-champagne" onClick={() => useUI.getState().set({ quickAdd: true })}>
-                Add the first entry
-              </button>
-            </Empty>
-          ) : (
-            <AnimatePresence initial={false}>
-              {recent.map((e) => (
-                <EntryRow key={e.id} entry={e} category={e.type === "expense" && e.categoryId ? catById.get(e.categoryId) : undefined} currency={currency} />
-              ))}
-            </AnimatePresence>
-          )}
-        </Section>
-
-        <Section
-          className="col-span-12"
-          title="Where the paycheck went"
-          hint="Hover a stream to trace it."
-          action={<Legend withLeftover />}
-        >
-          <div className="pt-2">
-            <PaycheckFlow summary={s} categories={categories} takeHome={settings.takeHome} currency={currency} />
-          </div>
-        </Section>
-
-        <Section className="col-span-12 xl:col-span-8" title="Twelve months" hint="Click a month to open it." action={<Legend withTakeHome />}>
-          <TrendChart data={trailing} selected={month} currency={currency} onSelect={setMonth} />
-        </Section>
-
-        <Section className="col-span-12 md:col-span-7 xl:col-span-4" title="Day by day" hint="Tap a day to see what went out.">
-          <SpendCalendar month={month} days={days} currency={currency} />
-        </Section>
-      </div>
-    </>
-  );
-}
-
-/* Headline ----------------------------------------------------------------------- */
-
-function Headline({ s, base, month, currency, savingsTarget }: { s: MonthSummary; base: number; month: string; currency: string; savingsTarget: number }) {
-  const left = base - s.outflow;
-  const fig = "font-serif text-ivory [font-variant-numeric:proportional-nums_lining-nums]";
-  return (
-    <header className="mb-10 lg:mb-12">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <MonthSwitcher />
-        <Button variant="primary" onClick={() => useUI.getState().set({ quickAdd: true })} className="hidden sm:inline-flex">
-          <Plus /> Add an entry
-        </Button>
-      </div>
-      <motion.h1
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="display max-w-[25ch] text-[40px] text-balance text-ivory/80 sm:text-[56px] xl:text-[64px]"
-      >
-        {s.hasIncome ? (
-          <>
-            <span className={fig}>{formatMoney(base, currency)}</span> came in for {monthLabel(month, "long")}.{" "}
-            {left >= 0 ? (
-              <>
-                <span className={fig}>{formatMoney(left, currency)}</span> of it hasn&apos;t been spent yet.
-              </>
-            ) : (
-              <>
-                You&apos;ve spent <span className={cn(fig, "!text-bad")}>{formatMoney(-left, currency)}</span> more than that.
-              </>
-            )}
-          </>
-        ) : (
-          <>Nothing has come in for {monthLabel(month, "long")} yet.</>
-        )}
-      </motion.h1>
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.6 }}
-        className="mt-5 max-w-[62ch] text-[15px] leading-relaxed text-mist"
-      >
-        {s.hasIncome ? (
-          <>
-            Gross pay was {formatMoney(s.gross, currency)}, and {formatMoney(s.deductions, currency)} went to taxes and deductions.{" "}
-            {s.rate != null && (
-              <>
-                You kept <span className="text-ivory">{formatMoney(Math.max(0, s.rate) * 100, currency)}</span> of every {formatMoney(100, currency)}; the
-                goal is {formatMoney(savingsTarget * 100, currency)}.
-              </>
-            )}
-          </>
-        ) : (
-          <>
-            Log your paycheck and your envelopes fill up for the month.{" "}
-            <Button variant="link" onClick={() => openEntry("income")}>
-              Log a paycheck
-            </Button>
-          </>
-        )}
-      </motion.p>
-    </header>
-  );
-}
-
-/* Shelves ------------------------------------------------------------------------- */
-
-const AIM: Record<Bucket, (t: string) => string> = {
-  needs: (t) => `aim for ${t} or less`,
-  wants: (t) => `aim for ${t} or less`,
-  savings: (t) => `aim for ${t} or more`,
-};
-
-function ShelfHeader({ bucket, s, base, target, budget, currency }: { bucket: Bucket; s: MonthSummary; base: number; target: number; budget: number; currency: string }) {
-  const amt = s.buckets[bucket];
-  const share = base > 0 ? amt / base : 0;
-  const off = s.hasIncome && (bucket === "savings" ? share < target : share > target);
-  const verb = bucket === "savings" ? "put away" : "spent";
-  return (
-    <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-      <h2 id={`shelf-${bucket}`} className="flex items-center gap-2.5 text-[22px] font-semibold tracking-[-0.02em] text-ivory [font-stretch:88%]">
-        <span className="h-[3px] w-5 rounded-full" style={{ background: BUCKETS[bucket].color }} />
-        {BUCKETS[bucket].label}
-      </h2>
-      <p className="text-[13.5px] text-mist">
-        <span className="text-ivory">{formatMoney(amt, currency)}</span> {verb} of {formatMoney(budget, currency)} budgeted.
-        {s.hasIncome && base > 0 && (
-          <>
-            {" "}
-            <span className={off ? (bucket === "savings" ? "text-warn" : "text-bad") : "text-ivory"}>{formatPct(share)} of pay</span>, {AIM[bucket](formatPct(target))}.
-          </>
-        )}
-      </p>
-    </div>
-  );
-}
-
-function EnvelopeContents({ data, category, month, currency, onClose }: { data: EnvelopeData; category: Category; month: string; currency: string; onClose: () => void }) {
-  const entries = useData((x) => x.entries);
-  const list = useMemo(
-    () => sortEntries(entriesIn(entries, month).filter((e) => e.type === "expense" && e.categoryId === data.id)),
-    [entries, month, data.id],
-  );
-  const r = readEnvelope(data, currency);
-  const saving = data.bucket === "savings";
-  return (
-    <motion.div
-      initial={{ height: 0, opacity: 0 }}
-      animate={{ height: "auto", opacity: 1 }}
-      exit={{ height: 0, opacity: 0 }}
-      transition={{ type: "spring", stiffness: 260, damping: 32 }}
-      className="overflow-hidden"
-    >
-      <div
-        className="mt-3 rounded-[var(--radius-card)] p-5 sm:p-6"
-        style={{ background: `color-mix(in oklab, ${BUCKETS[data.bucket].color} 9%, #121016)`, boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${BUCKETS[data.bucket].color} 22%, transparent)` }}
-      >
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h3 className="text-[18px] font-semibold tracking-[-0.015em] text-ivory">{data.name}</h3>
-            <p className="mt-0.5 text-[13.5px] text-mist">
-              {saving
-                ? `${formatMoney(data.spent, currency, true)} put in this month${data.budget > 0 ? ` toward ${formatMoney(data.budget, currency)}` : ""}.`
-                : r.over
-                  ? `${formatMoney(data.spent, currency, true)} spent against ${formatMoney(data.budget, currency)}. Move money from another envelope or raise the budget.`
-                  : `${formatMoney(data.spent, currency, true)} spent, ${r.amount} ${r.caption}.`}
+        {/* Savings rate -------------------------------------------------------- */}
+        <Rise className="col-span-12 sm:col-span-6 xl:order-1 xl:col-span-4">
+          <SpotlightCard className="flex h-full flex-col items-center justify-between gap-5 p-6 text-center" glow="181 134 42">
+            <CardHeader title="Savings rate" hint={`Target ${formatPct(targets.savings)} · tick on the ring`} className="w-full text-left" />
+            <SavingsRing rate={s.rate} target={targets.savings} />
+            <p className="max-w-[30ch] text-[13px] text-mist">
+              {s.rate == null ? (
+                "Log this month's pay to see how much you keep."
+              ) : (
+                <>
+                  You kept <span className="text-ivory">{formatMoney(Math.max(0, s.rate) * 100, currency)}</span> of every{" "}
+                  <span className="text-ivory">{formatMoney(100, currency)}</span> you took home.
+                </>
+              )}
             </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" onClick={() => openEntry("expense", undefined, { categoryId: category.id })}>
-              <Plus /> {saving ? "Put money in" : "Log spending"}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              Close
-            </Button>
-          </div>
-        </div>
-        <div className="mt-4">
-          {list.length === 0 ? (
-            <p className="py-3 text-[13.5px] text-dim">{saving ? "Nothing put in yet this month." : "Nothing has come out of this envelope yet."}</p>
-          ) : (
-            list.map((e) => <EntryRow key={e.id} entry={e} category={category} currency={currency} />)
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
+          </SpotlightCard>
+        </Rise>
 
-/* Small pieces -------------------------------------------------------------------- */
+        {/* 50/30/20 on small screens sits beside the ring */}
+        <Rise className="col-span-12 sm:col-span-6 xl:order-3 xl:col-span-4">
+          <SpotlightCard className="h-full p-6">
+            <CardHeader title="50 / 30 / 20 check" hint="Bar is actual · tick is your target" />
+            <div className="mt-6 flex flex-col gap-6">
+              {BUCKET_ORDER.map((k, i) => {
+                const share = base > 0 ? s.buckets[k] / base : 0;
+                const t = targets[k];
+                const status = !s.hasIncome ? (
+                  <Status tone="muted" icon={false}>
+                    No pay yet
+                  </Status>
+                ) : k === "savings" ? (
+                  share >= t ? <Status tone="good">On track</Status> : <Status tone="warn">Below target</Status>
+                ) : share > t ? (
+                  <Status tone="bad">Above target</Status>
+                ) : (
+                  <Status tone="good">On track</Status>
+                );
+                return (
+                  <div key={k}>
+                    <div className="mb-2.5 flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-2 text-[13.5px] font-medium text-ivory">
+                        <i className="inline-block size-2 rounded-[3px]" style={{ background: BUCKETS[k].color }} />
+                        {BUCKETS[k].label}
+                      </span>
+                      {status}
+                    </div>
+                    <div className="relative">
+                      <Meter value={share} color={BUCKETS[k].color} height={8} delay={0.2 + i * 0.1} />
+                      <span className="absolute -top-1 h-4 w-[2px] rounded-full bg-ivory shadow-[0_0_8px_rgb(255_255_255/0.5)]" style={{ left: `calc(${Math.min(t, 1) * 100}% - 1px)` }} />
+                    </div>
+                    <div className="tnum mt-2 flex justify-between text-[11.5px] text-dim">
+                      <span>
+                        <span className="text-mist">{formatPct(share)}</span> · {formatMoney(s.buckets[k], currency)}
+                      </span>
+                      <span>
+                        target {formatPct(t)} · {formatMoney(budgets[k], currency)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </SpotlightCard>
+        </Rise>
 
-function Section({ title, hint, action, className, children }: { title: string; hint?: string; action?: React.ReactNode; className?: string; children: React.ReactNode }) {
-  return (
-    <section className={cn("min-w-0 border-t border-line-2 pt-5", className)}>
-      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-        <div className="flex flex-wrap items-baseline gap-x-3">
-          <h2 className="text-[19px] font-semibold tracking-[-0.02em] text-ivory [font-stretch:90%]">{title}</h2>
-          {hint && <p className="text-[13px] text-dim">{hint}</p>}
-        </div>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
+        {/* Paycheck flow -------------------------------------------------------- */}
+        <Rise className="col-span-12 xl:order-2">
+          <SpotlightCard className="p-6 sm:p-7">
+            <CardHeader
+              title="Where your paycheck went"
+              hint="Hover a ribbon to trace it. Particles drift at the pace your money moves."
+              action={
+                <div className="flex flex-wrap gap-3 text-[11.5px] text-mist">
+                  {BUCKET_ORDER.map((b) => (
+                    <span key={b} className="flex items-center gap-1.5">
+                      <i className="inline-block size-2 rounded-[3px]" style={{ background: BUCKETS[b].color }} />
+                      {BUCKETS[b].short}
+                    </span>
+                  ))}
+                  <span className="flex items-center gap-1.5">
+                    <i className="inline-block size-2 rounded-[3px]" style={{ background: LEFTOVER_COLOR }} /> Left over
+                  </span>
+                </div>
+              }
+            />
+            <div className="mt-6">
+              <PaycheckFlow summary={s} categories={categories} takeHome={takeHome} currency={currency} />
+            </div>
+          </SpotlightCard>
+        </Rise>
 
-function Empty({ icon, children }: { icon?: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-3 py-4 text-[14px] text-mist">
-      {icon && <span className="text-dim">{icon}</span>}
-      <span>{children}</span>
-    </div>
-  );
-}
+        {/* Budgets to watch ------------------------------------------------------ */}
+        <Rise className="col-span-12 lg:col-span-7 xl:order-3 xl:col-span-4">
+          <SpotlightCard className="h-full p-6">
+            <CardHeader
+              title="Budgets to watch"
+              hint="Closest to their limit first"
+              action={
+                <Link href="/budget" className="flex items-center gap-1 text-[12.5px] text-champagne hover:text-ivory">
+                  All <ArrowUpRight className="size-3.5" />
+                </Link>
+              }
+            />
+            <div className="mt-5 flex flex-col gap-4">
+              {watch.length === 0 && <p className="py-6 text-center text-[13px] text-dim">No spending logged yet this month.</p>}
+              {watch.map(({ c, spent }, i) => {
+                const st = budgetState(spent, c.budget);
+                const color = st === "over" ? "#ff7d7d" : BUCKETS[c.bucket].color;
+                return (
+                  <div key={c.id}>
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <span className="truncate text-[13.5px] text-ivory">{c.name}</span>
+                      <span className="tnum shrink-0 text-[12.5px] text-dim">
+                        <span className="text-ivory">{formatMoney(spent, currency)}</span> / {formatMoney(c.budget, currency)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Meter value={c.budget > 0 ? spent / c.budget : 1} color={color} className="flex-1" delay={0.1 + i * 0.06} />
+                      <BudgetPill state={st} left={c.budget - spent} currency={currency} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </SpotlightCard>
+        </Rise>
 
-function Legend({ withLeftover, withTakeHome }: { withLeftover?: boolean; withTakeHome?: boolean }) {
-  return (
-    <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] text-mist">
-      {BUCKET_ORDER.map((b) => (
-        <span key={b} className="flex items-center gap-1.5">
-          <i className="inline-block h-[3px] w-3 rounded-full" style={{ background: BUCKETS[b].color }} />
-          {BUCKETS[b].short}
-        </span>
-      ))}
-      {withLeftover && (
-        <span className="flex items-center gap-1.5">
-          <i className="inline-block h-[3px] w-3 rounded-full" style={{ background: LEFTOVER_COLOR }} /> Left over
-        </span>
-      )}
-      {withTakeHome && (
-        <span className="flex items-center gap-1.5">
-          <i className="inline-block h-[2px] w-3 rounded-full bg-champagne" /> Take-home
-        </span>
-      )}
-    </div>
+        {/* Calendar ----------------------------------------------------------------- */}
+        <Rise className="col-span-12 lg:col-span-5 xl:order-3 xl:col-span-4">
+          <SpotlightCard className="h-full p-6">
+            <CardHeader title="Spending by day" hint="Tap a day to see what went out" />
+            <div className="mt-5">
+              <SpendCalendar month={month} days={days} currency={currency} />
+            </div>
+          </SpotlightCard>
+        </Rise>
+
+        {/* Trend ----------------------------------------------------------------- */}
+        <Rise className="col-span-12 xl:order-4 xl:col-span-8">
+          <SpotlightCard className="h-full p-6">
+            <CardHeader
+              title="Twelve months"
+              hint="Click a month to open it"
+              action={
+                <div className="flex flex-wrap gap-3 text-[11.5px] text-mist">
+                  {BUCKET_ORDER.map((b) => (
+                    <span key={b} className="flex items-center gap-1.5">
+                      <i className="inline-block size-2 rounded-[3px]" style={{ background: BUCKETS[b].color }} />
+                      {BUCKETS[b].short}
+                    </span>
+                  ))}
+                  <span className="flex items-center gap-1.5">
+                    <i className="inline-block h-[2px] w-3 rounded-full bg-champagne" /> Take-home
+                  </span>
+                </div>
+              }
+            />
+            <div className="mt-5">
+              <TrendChart data={trailing} selected={month} currency={currency} onSelect={setMonth} />
+            </div>
+          </SpotlightCard>
+        </Rise>
+
+        {/* Bills ------------------------------------------------------------------ */}
+        <Rise className="col-span-12 lg:col-span-5 xl:order-4 xl:col-span-4">
+          <SpotlightCard className="h-full p-6">
+            <CardHeader
+              title="Bills due"
+              action={
+                <Link href="/bills" className="flex items-center gap-1 text-[12.5px] text-champagne hover:text-ivory">
+                  All <ArrowUpRight className="size-3.5" />
+                </Link>
+              }
+            />
+            <div className="mt-4 flex flex-col">
+              {bills.length === 0 ? (
+                <div className="py-6 text-center">
+                  <CalendarClock className="mx-auto mb-2 size-6 text-dim" />
+                  <p className="text-[13px] text-dim">Add rent, phone and subscriptions so nothing slips.</p>
+                  <Link href="/bills" className="mt-3 inline-block text-[12.5px] text-champagne">
+                    Add bills
+                  </Link>
+                </div>
+              ) : due.length === 0 ? (
+                <p className="py-6 text-center text-[13px] text-dim">Every bill is logged for {monthLabel(month, "long")}. Nice.</p>
+              ) : (
+                due.map(({ bill, day, state }) => (
+                  <div key={bill.id} className="flex items-center gap-3 border-t border-line py-3 first:border-t-0">
+                    <div className="grid size-11 shrink-0 place-items-center rounded-xl border border-line bg-white/[0.03] leading-none">
+                      <span className="tnum font-serif text-[20px] text-ivory">{day}</span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[13.5px] text-ivory">{bill.name}</div>
+                      <div className="tnum text-[12px] text-dim">{bill.amount ? formatMoney(bill.amount, currency, true) : "Amount varies"}</div>
+                    </div>
+                    <BillPill state={state} />
+                  </div>
+                ))
+              )}
+            </div>
+          </SpotlightCard>
+        </Rise>
+
+        {/* Recent --------------------------------------------------------------- */}
+        <Rise className="col-span-12 lg:col-span-7 xl:order-5 xl:col-span-12">
+          <SpotlightCard className="h-full p-6">
+            <CardHeader
+              title="Recent activity"
+              action={
+                <Link href="/activity" className="flex items-center gap-1 text-[12.5px] text-champagne hover:text-ivory">
+                  See all <ArrowUpRight className="size-3.5" />
+                </Link>
+              }
+            />
+            <div className="mt-3">
+              {recent.length === 0 ? (
+                <div className="py-8 text-center text-[13px] text-dim">
+                  Nothing logged for {monthLabel(month)}.{" "}
+                  <button type="button" className="cursor-pointer text-champagne" onClick={() => useUI.getState().set({ quickAdd: true })}>
+                    Add the first entry
+                  </button>
+                </div>
+              ) : (
+                <AnimatePresence initial={false}>
+                  {recent.map((e) => (
+                    <EntryRow key={e.id} entry={e} category={e.type === "expense" && e.categoryId ? catById.get(e.categoryId) : undefined} currency={currency} />
+                  ))}
+                </AnimatePresence>
+              )}
+            </div>
+          </SpotlightCard>
+        </Rise>
+      </Stagger>
+    </>
   );
 }
 

@@ -40,7 +40,7 @@ export function Year() {
         eyebrow="Year in review"
         title={
           <>
-            {year}, month by month
+            {year}, <span className="italic text-dim">month by month</span>
           </>
         }
         right={<MonthSwitcher step={12} mode="year" />}
@@ -62,7 +62,7 @@ export function Year() {
           <SpotlightCard as="div" className="p-5">
             <div className="eyebrow">Emergency fund goal</div>
             <div className="tnum mt-2 font-serif text-[26px] leading-none text-ivory">
-              {money(avgNeeds * 3)} – {money(avgNeeds * 6)}
+              {money(avgNeeds * 3)} <span className="text-dim">–</span> {money(avgNeeds * 6)}
             </div>
             <div className="mt-1.5 text-[11.5px] text-dim">3–6 months of Needs ({money(avgNeeds)}/mo avg)</div>
           </SpotlightCard>
