@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Status } from "@/components/ui/status";
 import { Stagger, Rise } from "@/components/ui/motion";
 import { SampleBanner } from "./sample-banner";
+import { AccountCard } from "@/components/auth/account-card";
 
 /** Text/number input that keeps its own draft while focused and commits on change. */
 function useDraft(value: string | number, commit: (v: string) => void, delay = 400) {
@@ -143,6 +144,7 @@ export function Budget() {
                 ))}
               </div>
             </SpotlightCard>
+            {cloudEnabled && <AccountCard />}
             <DataCard />
           </div>
         </Rise>
