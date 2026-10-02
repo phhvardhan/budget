@@ -48,7 +48,7 @@ export function Guide() {
         eyebrow="How it works"
         title={
           <>
-            Thirty minutes <span className="italic text-gradient-champagne">a month.</span>
+            Thirty minutes a month.
           </>
         }
         sub="Log every dollar in, log every dollar out, review once a month. That's the whole system."
@@ -64,7 +64,7 @@ export function Guide() {
                   {time}
                 </span>
               </div>
-              <h3 className="font-serif text-[26px] leading-[1.05] text-ivory">{title}</h3>
+              <h3 className="display text-[24px] text-ivory">{title}</h3>
               <p className="mt-3 text-[13px] leading-relaxed text-mist">{body}</p>
             </SpotlightCard>
           ))}

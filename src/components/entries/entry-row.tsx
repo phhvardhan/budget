@@ -34,27 +34,27 @@ export const EntryRow = forwardRef<
       className="group/row -mx-3 flex w-[calc(100%+24px)] cursor-pointer items-center gap-3.5 rounded-2xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.04]"
     >
       <span
-        className="relative grid size-10 shrink-0 place-items-center rounded-[13px] border border-white/[0.06]"
-        style={{ background: `color-mix(in oklab, ${color} 14%, transparent)` }}
+        className="relative grid size-9 shrink-0 place-items-center rounded-[9px]"
+        style={{ background: `color-mix(in oklab, ${color} 16%, #15131a)`, boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${color} 28%, transparent)` }}
       >
         {isIncome ? (
           <ArrowDownLeft className="size-4 text-good" strokeWidth={2.2} />
         ) : (
-          <span className="size-2.5 rounded-full" style={{ background: color, boxShadow: `0 0 10px ${color}` }} />
+          <span className="h-[3px] w-3.5 rounded-full" style={{ background: color }} />
         )}
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
           <span className="truncate text-[14px] font-medium text-ivory">{title}</span>
           {e.isSample && (
-            <span className="shrink-0 rounded-md bg-champagne/10 px-1.5 py-0.5 font-mono text-[9px] tracking-[0.12em] text-champagne uppercase">
-              sample
+            <span className="shrink-0 rounded-[5px] border border-champagne/25 px-1.5 py-px text-[10.5px] text-champagne/90">
+              Sample
             </span>
           )}
         </span>
-        <span className="block truncate text-[12px] text-dim">{meta.filter(Boolean).join(" · ")}</span>
+        <span className="block truncate text-[12px] text-dim">{meta.filter(Boolean).join(", ")}</span>
       </span>
-      <span className={`tnum shrink-0 text-[14.5px] font-medium ${isIncome ? "text-good" : "text-ivory"}`}>
+      <span className={`font-serif shrink-0 text-[17px] ${isIncome ? "text-good" : "text-ivory"}`}>
         {isIncome ? "+" : ""}
         {formatMoney(amount, currency, true)}
       </span>

@@ -34,7 +34,7 @@ export function SpendCalendar({ month, days, currency }: { month: string; days: 
           {shown != null ? (
             <>
               <span className="text-ivory">{new Date(y, m - 1, shown + 1).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}</span>
-              {" · "}
+              {": "}
               <span className="tnum text-ivory">{formatMoney(days[shown], currency, true)}</span>
             </>
           ) : (

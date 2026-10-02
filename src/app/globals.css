@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
 /*
-  Payday Ledger — "Obsidian & Champagne"
-  Ink-black ground with a faint violet warmth, ivory type, one champagne accent.
-  Three jewel tones carry the budget buckets: sapphire (Needs), rose (Wants), gold (Savings).
+  Payday Ledger: cash envelopes on a night desk.
+  Ink ground, ivory type, champagne for money that is still yours.
+  Each budget bucket has its own envelope paper: sapphire (Needs), rose (Wants), gold (Savings).
+  One typeface, Bricolage Grotesque; amounts use its condensed width like figures stamped on an envelope.
 */
 @theme {
   --color-ink: #0a090d;
@@ -25,11 +26,12 @@
   --color-warn: #f0c66b;
   --color-bad: #ff7d7d;
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
-  --font-serif: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-sans: var(--font-bricolage), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  /* There is no serif in this system: the historical "font-serif" class is the condensed figure style. */
+  --font-serif: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
 
-  --radius-card: 22px;
+  --radius-card: 16px;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
   --animate-drift-a: drift-a 26s ease-in-out infinite alternate;
@@ -67,7 +69,8 @@ body {
 
 body {
   font-family: var(--font-sans);
-  font-feature-settings: "ss01", "cv11";
+  font-size: 15px;
+  font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -112,12 +115,28 @@ body {
 }
 
 @utility eyebrow {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 12.5px;
   font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-dim);
+  letter-spacing: 0;
+  color: var(--color-mist);
+}
+
+/* Display figures: Bricolage at its narrowest, set tight like a stamped amount. */
+/* "font-serif" is the historical class name for the figure role. */
+@utility font-serif {
+  font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  font-stretch: 76%;
+  font-weight: 640;
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+@utility display {
+  font-family: var(--font-sans);
+  font-stretch: 88%;
+  font-weight: 560;
+  letter-spacing: -0.028em;
+  line-height: 1.02;
 }
 
 @utility tnum {

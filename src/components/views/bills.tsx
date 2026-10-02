@@ -52,7 +52,7 @@ export function Bills() {
         eyebrow="Bills"
         title={
           <>
-            The ones that <span className="italic text-dim">always</span> come back
+            The ones that always come back
           </>
         }
         right={<MonthSwitcher />}
@@ -123,7 +123,7 @@ export function Bills() {
                       >
                         <div className="relative grid size-[52px] place-items-center rounded-2xl border border-line bg-white/[0.03] leading-none">
                           <span className="tnum font-serif text-[24px] text-ivory">{day}</span>
-                          <span className="absolute bottom-1.5 font-mono text-[8.5px] tracking-[0.12em] text-dim uppercase">{monthLabel(month, "short")}</span>
+                          <span className="absolute bottom-1 text-[9.5px] text-dim">{monthLabel(month, "short")}</span>
                           <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full" style={{ background: color }} />
                         </div>
                         <div className="min-w-0">
@@ -132,7 +132,7 @@ export function Bills() {
                             {bill.autopay && <Zap className="size-3.5 shrink-0 text-champagne" />}
                           </div>
                           <div className="tnum truncate text-[12.5px] text-dim">
-                            {[c?.name ?? "No category", bill.amount ? formatMoney(bill.amount, currency, true) : "Amount varies", bill.method].filter(Boolean).join(" · ")}
+                            {[c?.name ?? "No category", bill.amount ? formatMoney(bill.amount, currency, true) : "Amount varies", bill.method].filter(Boolean).join(", ")}
                           </div>
                         </div>
                         <BillPill state={state} />

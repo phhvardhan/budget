@@ -86,7 +86,7 @@ export function Activity() {
 
   return (
     <>
-      <PageHeader eyebrow="Activity" title={<>Every dollar, <span className="italic text-dim">in and out</span></>} right={<MonthSwitcher />} />
+      <PageHeader eyebrow="Activity" title={<>Every dollar, in and out</>} right={<MonthSwitcher />} />
       <SampleBanner />
       <Stagger className="flex flex-col gap-5">
         <Rise className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">

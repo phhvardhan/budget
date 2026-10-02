@@ -8,6 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/fields";
 import { Segmented } from "@/components/ui/segmented";
 import { LogoMark, Wordmark } from "@/components/shell/logo";
+import { Envelope } from "@/components/envelopes/envelope";
+
+const PREVIEW = [
+  { id: "p1", name: "Groceries", bucket: "needs" as const, budget: 400, spent: 127 },
+  { id: "p2", name: "Dining out", bucket: "wants" as const, budget: 300, spent: 210 },
+  { id: "p3", name: "Emergency fund", bucket: "savings" as const, budget: 400, spent: 400 },
+];
 
 type Method = "password" | "link";
 
@@ -87,12 +94,17 @@ export function SignIn() {
           <LogoMark className="size-10" />
           <Wordmark />
         </div>
-        <h1 className="font-serif text-[52px] leading-[0.95] tracking-[-0.02em] text-ivory">
+        <h1 className="display text-[48px] text-ivory sm:text-[54px]">
           Your money,
           <br />
-          <span className="italic text-gradient-champagne">quietly in order.</span>
+          quietly in order.
         </h1>
         <p className="mt-4 text-[14.5px] text-mist">Sign in to sync your ledger across your devices. You stay signed in until you sign out.</p>
+        <div inert aria-hidden className="mt-8 grid grid-cols-3 gap-3">
+          {PREVIEW.map((e, i) => (
+            <Envelope key={e.id} data={e} currency="USD" index={i} />
+          ))}
+        </div>
 
         <div className="glass mt-8 rounded-[24px] p-5">
           <Segmented
