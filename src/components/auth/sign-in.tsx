@@ -2,39 +2,77 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Mail, ShieldCheck } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Mail, ShieldCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/fields";
+import { Segmented } from "@/components/ui/segmented";
 import { LogoMark, Wordmark } from "@/components/shell/logo";
 
+type Method = "password" | "link";
+
+/** Turn Supabase auth errors into plain guidance. */
+function friendly(message: string, method: Method, creating: boolean) {
+  const m = message.toLowerCase();
+  if (m.includes("rate limit"))
+    return "Too many sign-in emails were sent in the last hour. Use password sign-in instead, or try the email link again later.";
+  if (m.includes("invalid login credentials"))
+    return "That email and password don't match. If you've only used email links so far, sign in with a link once, then set a password on the Budget page.";
+  if (m.includes("already registered") || m.includes("already been registered"))
+    return "This email already has an account. Sign in instead. If it has no password yet, use the email link once and set one on the Budget page.";
+  if (m.includes("password should be") || m.includes("weak"))
+    return "Choose a stronger password: at least 8 characters.";
+  if (m.includes("email not confirmed"))
+    return "This email hasn't been confirmed yet. Use the email link to sign in.";
+  if (m.includes("signups not allowed") || m.includes("signup is disabled"))
+    return "New accounts are turned off for this ledger.";
+  return creating && method === "password" ? `Couldn't create the account: ${message}` : message;
+}
+
 export function SignIn() {
+  const [method, setMethod] = useState<Method>("password");
+  const [creating, setCreating] = useState(false);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
   const [sent, setSent] = useState(false);
-  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
 
-  const send = async () => {
+  const validEmail = /^\S+@\S+\.\S+$/.test(email);
+
+  const withPassword = async () => {
     const sb = supabase();
     if (!sb) return;
-    if (!/^\S+@\S+\.\S+$/.test(email)) return setError("Enter a valid email address.");
+    if (!validEmail) return setError("Enter a valid email address.");
+    if (password.length < 8) return setError("Passwords are at least 8 characters.");
+    setBusy(true);
+    setError(null);
+    setNote(null);
+    if (creating) {
+      const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
+      setBusy(false);
+      if (error) return setError(friendly(error.message, "password", true));
+      // With email confirmation off, a session comes back and the app opens on its own.
+      if (!data.session) setNote("Account created. Check your inbox to confirm it, then sign in here.");
+      return;
+    }
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    setBusy(false);
+    if (error) setError(friendly(error.message, "password", false));
+  };
+
+  const sendLink = async () => {
+    const sb = supabase();
+    if (!sb) return;
+    if (!validEmail) return setError("Enter a valid email address.");
     setBusy(true);
     setError(null);
     const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin } });
     setBusy(false);
-    if (error) return setError(error.message);
+    if (error) return setError(friendly(error.message, "link", false));
     setSent(true);
-  };
-
-  const verify = async () => {
-    const sb = supabase();
-    if (!sb || code.trim().length < 6) return;
-    setBusy(true);
-    setError(null);
-    const { error } = await sb.auth.verifyOtp({ email, token: code.trim(), type: "email" });
-    setBusy(false);
-    if (error) setError("That code didn't work. Request a new one and try again.");
   };
 
   return (
@@ -54,29 +92,98 @@ export function SignIn() {
           <br />
           <span className="italic text-gradient-champagne">quietly in order.</span>
         </h1>
-        <p className="mt-4 text-[14.5px] text-mist">Sign in with your email. We&apos;ll send a one-time link — no password to remember.</p>
+        <p className="mt-4 text-[14.5px] text-mist">Sign in to sync your ledger across your devices. You stay signed in until you sign out.</p>
 
         <div className="glass mt-8 rounded-[24px] p-5">
+          <Segmented
+            label="Sign-in method"
+            className="mb-5 w-full"
+            value={method}
+            onChange={(m) => {
+              setMethod(m);
+              setError(null);
+              setNote(null);
+            }}
+            options={[
+              { value: "password", label: "Password" },
+              { value: "link", label: "Email link" },
+            ]}
+          />
+
           <AnimatePresence mode="wait" initial={false}>
-            {!sent ? (
+            {method === "password" ? (
               <motion.form
-                key="email"
+                key={creating ? "create" : "signin"}
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 12 }}
                 onSubmit={(e) => {
                   e.preventDefault();
-                  void send();
+                  void withPassword();
                 }}
                 className="flex flex-col gap-3"
               >
-                <label htmlFor="email" className="text-[12px] font-medium text-mist">
+                <label htmlFor="pw-email" className="text-[12px] font-medium text-mist">
                   Email
                 </label>
-                <Input id="email" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />
+                <Input id="pw-email" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />
+                <label htmlFor="pw-password" className="mt-1 text-[12px] font-medium text-mist">
+                  {creating ? "Choose a password" : "Password"}
+                </label>
+                <div className="relative">
+                  <Input
+                    id="pw-password"
+                    type={show ? "text" : "password"}
+                    autoComplete={creating ? "new-password" : "current-password"}
+                    placeholder={creating ? "At least 8 characters" : "Your password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pr-11"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShow((s) => !s)}
+                    aria-label={show ? "Hide password" : "Show password"}
+                    className="absolute top-1/2 right-2 grid size-8 -translate-y-1/2 cursor-pointer place-items-center rounded-lg text-dim transition hover:text-ivory"
+                  >
+                    {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+                <Button type="submit" variant="primary" size="lg" disabled={busy} className="mt-2">
+                  {busy ? (creating ? "Creating…" : "Signing in…") : creating ? "Create account" : "Sign in"} <ArrowRight />
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCreating((c) => !c);
+                    setError(null);
+                    setNote(null);
+                  }}
+                  className="cursor-pointer self-start text-[12.5px] text-dim transition hover:text-mist"
+                >
+                  {creating ? "Already have an account? Sign in" : "New here? Create an account"}
+                </button>
+              </motion.form>
+            ) : !sent ? (
+              <motion.form
+                key="link"
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 12 }}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void sendLink();
+                }}
+                className="flex flex-col gap-3"
+              >
+                <label htmlFor="link-email" className="text-[12px] font-medium text-mist">
+                  Email
+                </label>
+                <Input id="link-email" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />
                 <Button type="submit" variant="primary" size="lg" disabled={busy} className="mt-1">
                   {busy ? "Sending…" : "Send sign-in link"} <ArrowRight />
                 </Button>
+                <p className="text-[12px] text-dim">Open the link in this same browser. Only a few links can be sent per hour.</p>
               </motion.form>
             ) : (
               <motion.div key="sent" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }} className="flex flex-col gap-4">
@@ -87,22 +194,10 @@ export function SignIn() {
                   <div>
                     <div className="text-[14.5px] font-medium text-ivory">Check your inbox</div>
                     <p className="text-[13px] text-mist">
-                      We sent a link to <span className="text-ivory">{email}</span>. Open it on this device to sign in.
+                      We sent a link to <span className="text-ivory">{email}</span>. Open it in this browser to sign in, then set a password on the Budget page so you won&apos;t need links again.
                     </p>
                   </div>
                 </div>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void verify();
-                  }}
-                  className="flex gap-2"
-                >
-                  <Input inputMode="numeric" autoComplete="one-time-code" placeholder="Or enter the 6-digit code" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))} className="tnum tracking-[0.2em]" />
-                  <Button type="submit" variant="secondary" disabled={busy || code.length < 6}>
-                    Verify
-                  </Button>
-                </form>
                 <button type="button" onClick={() => setSent(false)} className="cursor-pointer self-start text-[12.5px] text-dim transition hover:text-mist">
                   Use a different email
                 </button>
@@ -110,6 +205,7 @@ export function SignIn() {
             )}
           </AnimatePresence>
           {error && <p className="mt-3 text-[13px] text-bad">{error}</p>}
+          {note && <p className="mt-3 text-[13px] text-good">{note}</p>}
         </div>
         <p className="mt-6 flex items-center gap-2 text-[12px] text-dim">
           <ShieldCheck className="size-3.5" /> Your entries are private to your account and sync between your devices.
